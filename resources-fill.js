@@ -1,5 +1,6 @@
 const request = require('request');
-const url = '';
+// example: 'http://user:password@domain:port/'
+const baseUrl = 'http://test:test@localhost:2200/';
 
 const resourceTemplate = {
   "title": "Test",
@@ -26,15 +27,15 @@ const resourceTemplate = {
   "isDownloadable": "",
   "sourcePlanet": "test36",
   "resideOn": "test36",
-  "createdDate": 1532370597861,
-  "updatedDate": 1532370597861
+  "createdDate": Date.now(),
+  "updatedDate": Date.now()
 }
 const numberOfTags = 100;
 const numberOfResources = 10000;
 let resourceCount = 1;
 
-const addResource = (resource, callback) => {
-  request.post({ url, body: resource, json: true }, callback);
+const addResource = (resources, callback) => {
+  request.post({ uri: baseUrl + 'resources/_bulk_docs', body: { docs: resources }, json: true }, callback);
 }
 
 const newTags = (tags) => {
@@ -53,13 +54,12 @@ const prepareResource = () => {
 }
 
 const addAllResources = () => {
-  addResource(prepareResource(), (err, res) => {
+  let resources = [];
+  for (var i = 0; i < numberOfResources; i++) {
+    resources.push(prepareResource()); 
+  }
+  addResource(resources, (err, res) => {
     //console.log(res);
-    resourceCount++;
-    if (resourceCount > numberOfResources) {
-      return;
-    }
-    addAllResources();
   });
 }
 
