@@ -32,7 +32,6 @@ const resourceTemplate = {
 }
 const numberOfTags = 100;
 const numberOfResources = 10000;
-let resourceCount = 1;
 
 const addResource = (resources, callback) => {
   request.post({ uri: baseUrl + 'resources/_bulk_docs', body: { docs: resources }, json: true }, callback);
@@ -46,7 +45,7 @@ const newTags = (tags) => {
   return newTags(tags.concat([ newTag ]));
 }
 
-const prepareResource = () => {
+const prepareResource = (resourceCount) => {
   const newResource = Object.assign({}, resourceTemplate);
   newResource.title = 'Tag Test ' + resourceCount;
   newResource.tags = newTags([]);
@@ -56,7 +55,7 @@ const prepareResource = () => {
 const addAllResources = () => {
   let resources = [];
   for (var i = 0; i < numberOfResources; i++) {
-    resources.push(prepareResource()); 
+    resources.push(prepareResource(i + 1)); 
   }
   addResource(resources, (err, res) => {
     //console.log(res);
