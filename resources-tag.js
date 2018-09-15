@@ -28,6 +28,9 @@ const fileType = (resource) => {
   if (attachments.length === 0) {
     return [];
   }
+  if (resource.mediaType === 'HTML') {
+    return [ 'medium: HTML' ];
+  }
   const detailedTypeArr = attachments[0][1].content_type.split('/');
   if ([ 'video', 'audio', 'image' ].indexOf(detailedTypeArr[0]) > -1) {
     return [ 'medium: ' + detailedTypeArr[0] ];
