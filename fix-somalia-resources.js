@@ -10,6 +10,7 @@ const badTypes = [
   'video/x-flv',
   'video/flv',
   'video/3gpp',
+  'no-attachments'
 ];
 
 const badTitles = [
@@ -45,12 +46,33 @@ const getResources = (callback) => {
 const updateResources = (resources, isDelete, callback) => {
   const data = isDelete ? 
     resources.map(resource => ({ ...resource.doc, '_deleted': true })) :
-    resources.map(resource => resource.doc);
+    resources;
   request.post({ uri: uri + '/_bulk_docs', body: { docs: data }, json: true }, callback);
 }
 
-reuploadAttachments = (resources, callback) => {
+reuploadAttachments = (resources, index, type, callback) => {
+  if (index === resources.length) {
+    callback();
+    return;
+  }
+  const resource = resources[index];
+  request.get({ uri: uri + '/' + resource._id + '?attachments=true', json: true }, (err, res) => {
+    reuploadAttachment(res.body, type,
+      (err, response) => reuploadAttachments(resources, index + 1, type, callback));
+  });
+};
 
+reuploadAttachment = (resource, type, callback) => {
+  const attachmentKey = Object.keys(resource._attachments)[0];
+  const attachment = resource._attachments[attachmentKey];
+  attachment.content_type = type;
+  if (attachmentKey.slice(-4) !== '.pdf' && type === 'application/pdf') {
+    resource._attachments[attachmentKey + '.pdf'] = attachment;
+    delete resource._attachments[attachmentKey];
+    delete resource[attachmentKey + '.pdf'];
+    request.post({ uri, body: resource, json: true }, callback);
+  }
+  callback();
 };
 
 const existsInArray = (item, array) => array.indexOf(item) > -1;
@@ -79,37 +101,45 @@ const resourcesToDelete = (resources) => {
 };
 
 const deleteStep = (resources) => {
+  console.log('Deleting resources...');
   const [ okResources, badResources ] = resourcesToDelete(resources);
-  badResources.forEach((resource) => console.log(resource.doc.title));
   updateResources(badResources, true, () => getResources(HTMLstep));
 };
 
 const HTMLstep = (resources) => {
-  const htmlResources = resources.filter(resource => resource.doc.openWith === 'HTML').map(resource => {
-    resource.doc.openWith = 'index.html';
+  console.log('Fixing HTML resources...');
+  const htmlResources = resources.filter(resource => resource.doc.openWith === 'index.html').map(resource => {
+    resource.doc.openWhichFile = 'index.html';
     resource.doc.mediaType = 'HTML';
-    return resource;
+    return resource.doc;
   });
   updateResources(htmlResources, false, () => getResources(descriptionStep));
 };
 
 const descriptionStep = (resources) => {
+  console.log('Fixing array description resources...');
   const badDescriptionResources = resources
     .filter(resource => Array.isArray(resource.doc.description))
-    .map(resource => ({ ...resource, description: resource.description[0] }));
+    .map(resource => ({ ...resource.doc, description: resource.doc.description[0] }));
   updateResources(badDescriptionResources, false, () => getResources(pdfStep));
 };
 
 const pdfStep = (resources) => {
-  const reuploadPdfResources = resources.filter(resource => {
-    const types = attachmentTypes(resources._attachments);
-    return types.length === 1 && types[0] === 'application/octet-stream';
-  });
-
+  console.log('Fixing PDFs...');
+  changeTypeStep(resources, 'application/octet-stream', 'application/pdf', () => getResources(oggStep));
 };
 
-//getResources(deleteStep);
+const oggStep = (resources) => {
+  console.log('Fixing OGG audio...');
+  changeTypeStep(resources, 'application/ogg', 'audio/ogg', () => console.log('Done'));
+};
 
-request.get({ uri: 'http://peace:builder@pirate.ole.org:26082/resources/002df5029d490ff332ae5f939abd2fae?attachments=true', json: true },
-  (err, response) => console.log(response.body));
+const changeTypeStep = (resources, originalType, newType, callback) => {
+  const reuploadResources = resources.filter(resource => {
+    const types = attachmentTypes(resource.doc._attachments);
+    return types.length === 1 && types[0] === originalType;
+  }).map(resource => resource.doc);
+  reuploadAttachments(reuploadResources, 0, newType, callback);
+};
 
+getResources(deleteStep);
