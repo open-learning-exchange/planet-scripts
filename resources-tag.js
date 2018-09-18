@@ -1,10 +1,15 @@
 const request = require('request');
 
-const uri = '';
-const postUri = '';
+const user = process.argv[2];
+const pass = process.argv[3];
+const domain = process.argv[4] || 'localhost:5984';
+const protocol = process.argv[5] || 'http';
+
+const uri = protocol + '://' + user + ':' + pass + '@' + domain + '/resources/_all_docs?include_docs=true';
+const postUri = protocol + '://' + user + ':' + pass + '@' + domain + '/resources';
 
 const getResources = (callback) => {
-  request.get({ uri }, callback);
+  request.get({ uri, json: true }, callback);
 }
 
 const postCallback = (err, response) => {
@@ -28,6 +33,9 @@ const fileType = (resource) => {
   if (attachments.length === 0) {
     return [];
   }
+  if (resource.mediaType === 'HTML') {
+    return [ 'medium: html' ];
+  }
   const detailedTypeArr = attachments[0][1].content_type.split('/');
   if ([ 'video', 'audio', 'image' ].indexOf(detailedTypeArr[0]) > -1) {
     return [ 'medium: ' + detailedTypeArr[0] ];
@@ -47,9 +55,8 @@ const createTags = (resource, fieldName) => {
 }
 
 const tagResources = (err, response) => {
-  const resources = JSON.parse(response.body).rows;
-  resources.forEach(({ doc }) => {
-    if (doc._id === '_design/resources') {
+  const resources = response.body.rows.map(({ doc }) => {
+    if (doc._id.indexOf('_design/') > -1) {
       return;
     }
     const tags = [].concat(
@@ -58,14 +65,14 @@ const tagResources = (err, response) => {
       createTags(doc, 'tags'),
       [ 'language: ' + doc.language ],
       fileType(doc)
-    ).reduce(dedupeArray, []).map(tag => tag);
-    // console.log({ ...doc, tags });
-    request.post({
-      uri: postUri,
-      body: JSON.stringify({ ...doc, tags }),
-      headers: { 'Content-Type': 'application/json' }
-    }, postCallback);
-  });
+    ).map(tag => tag.toLowerCase()).reduce(dedupeArray, []).map(tag => tag);
+    return { ...doc, tags };
+  }).filter(resource => resource !== undefined);
+  request.post({
+    uri: postUri + '/_bulk_docs',
+    body: { docs: resources },
+    json: true
+  }, postCallback);
 }
 
 getResources(tagResources);

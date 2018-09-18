@@ -8,7 +8,7 @@ const getResources = (callback) => {
 
 const attachmentTypes = (attachments) => {
   if (!attachments) {
-    return [];
+    return [ 'no-attachments' ];
   }
   return Object.keys(attachments).map((key) => {
     return attachments[key].content_type
@@ -32,16 +32,48 @@ const logResults = (allTypes) => {
   });
 }
 
+const equalsTypes = (types) => {
+  // Uncomment to list resource titles of that type
+  const equalTypes = [
+    // 'application/msword',
+    // 'application/vnd.ms-excel',
+    // 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    // 'application/x-sh',
+    // 'application/vnd.android.package-archive',
+    // 'application/ogg',
+    // 'image/jpg',
+    // 'image/svg+xml',
+    // 'image/x-icon',
+    // 'image/png',
+    // 'image/jpeg'
+    // 'application/octet-stream'
+    // 'video/quicktime',
+    // 'video/x-flv',
+    // 'video/webm',
+    // 'video/flv',
+    // 'video/3gpp',
+    // 'video/ogg'
+  ];
+  return types.reduce((isMatch, type) => {
+    return isMatch || (equalTypes.indexOf(type) > -1);
+  }, false);
+}
+
 const findLargest = (err, response) => {
+  let count = 0;
   const allTypes = JSON.parse(response.body).rows.reduce((all, item, index, arr) => {
-    // console.log('Reading doc ' + index + ' of ' + arr.length);
     const doc = item.doc;
     const types = attachmentTypes(doc._attachments);
+    if (equalsTypes(types)) {
+      count++;
+      console.log(doc.title);
+    }
     if (types.length > 0) {
       return all.concat(types);
     }
     return all;
   }, []);
+  console.log('Total:' + count);
   logResults(allTypes);
 }
 
