@@ -3,16 +3,19 @@ const request = require('request');
 const source = process.argv[2]; // ex https://dev.media.mit.edu:2200/
 const sourceUser = process.argv[3];
 const sourcePass = process.argv[4];
-const targetUser = process.argv[5];
-const targetPass = process.argv[6];
-const db = process.argv[7];
-const target = 'http://localhost:5984/';
+const target = process.argv[5];
+const targetUser = process.argv[6];
+const targetPass = process.argv[7];
+const db = process.argv[8];
+const internalTarget = 'http://localhost:5984/';
 const maxReplicators = 25;
 const waitTime = 10000;
 
+console.log('running script');
+
 const replicatorObj = (id) => ({
   'source': dbObj(sourceUser, sourcePass, source + db),
-  'target': dbObj(targetUser, targetPass, target + db),
+  'target': dbObj(targetUser, targetPass, internalTarget + db),
   'selector': { '_id': id },
   'create_target':  false,
   'owner': targetUser,
