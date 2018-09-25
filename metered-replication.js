@@ -1,11 +1,11 @@
 const request = require('request');
 
-const source = process.argv[2]; // ex https://dev.media.mit.edu/
-const sourceUser = process.argv[4];
-const sourcePass = process.argv[5];
-const targetUser = process.argv[6];
-const targetPass = process.argv[7];
-const db = process.argv[8];
+const source = process.argv[2]; // ex https://dev.media.mit.edu:2200/
+const sourceUser = process.argv[3];
+const sourcePass = process.argv[4];
+const targetUser = process.argv[5];
+const targetPass = process.argv[6];
+const db = process.argv[7];
 const target = 'http://localhost:5984/';
 const maxReplicators = 25;
 const waitTime = 10000;
