@@ -80,7 +80,7 @@ const runReplication = (items, index) => {
     const runningSize = calculateAttachmentSize(getDocsFromReplicators(running, items));
     const nextDocSize = calculateAttachmentSize([ items[index] ]);
     if ((running.length > 0 && runningSize + nextDocSize >= maxReplicatorSize) || replicators[0] === 'no-response') {
-      console.log('Replicators full.');
+      console.log('Replicators full. (' + (runningSize + nextDocSize) + ')');
       setTimeout(() => runReplication(items, index), waitTime);
       return;
     }
