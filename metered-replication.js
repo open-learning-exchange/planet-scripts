@@ -9,8 +9,8 @@ const targetUser = process.argv[6];
 const targetPass = process.argv[7];
 const db = process.argv[8];
 const internalTarget = 'http://localhost:5984/';
-const maxReplicators = 5;
-const waitTime = 30000;
+const maxReplicators = 3;
+const waitTime = 10000;
 
 const replicatorObj = (id) => ({
   'source': dbObj(sourceUser, sourcePass, source + db),
@@ -33,7 +33,6 @@ const dbObj = (user, pass, url) => ({
 });
 
 const getData = (uri, user, pass, callback) => {
-  console.log(uri);
   request.get({ uri: uri + '/_all_docs?include_docs=true', json: true, ...headersObj(user, pass) }, (err, response) => {
     if (response && response.body && response.body.rows) {
       return callback(response.body.rows.map(item => item.doc));
@@ -65,6 +64,7 @@ const runReplication = (items, index) => {
   const replicatorsCallback = (replicators) => {
     const { completed, running } = runningAndCompletedReplicators(replicators);
     if (running.length >= maxReplicators || replicators[0] === 'no-response') {
+      console.log('Replicators full.');
       setTimeout(() => runReplication(items, index), waitTime);
       return;
     }
