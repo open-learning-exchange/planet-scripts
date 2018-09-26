@@ -63,9 +63,9 @@ const compareDataAndBeginReplication = (sourceData) => {
 
 const calculateAttachmentSize = (docs) => {
   return docs.reduce(
-    (totalSize, doc) => totalSize + Object.keys(doc._attachments).reduce(
+    (totalSize, doc) => totalSize + doc._attachments ? Object.keys(doc._attachments).reduce(
       (docSize, attachmentName) => docSize + doc._attachments[attachmentName].length, 0
-    ), 0
+    ) : 0, 0
   );
 }
 
