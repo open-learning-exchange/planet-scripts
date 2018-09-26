@@ -11,7 +11,7 @@ const targetPass = process.argv[7];
 const db = process.argv[8];
 const internalTarget = 'http://localhost:5984/';
 const maxReplicatorSize = 26214400; // 25 MB
-const runningReplicatorSize = 0;
+const maxReplicators = 12;
 const waitTime = 10000;
 
 const replicatorObj = (id) => ({
@@ -55,8 +55,8 @@ const getReplicationData = () => {
 
 const compareDataAndBeginReplication = (sourceData) => {
   const data = sourceData.filter((sourceItem) => {
-    return idsToFix.find(id => sourceItem._id === id);
-  });
+    return idsToFix.findIndex(id => sourceItem._id === id) > -1;
+  }).concat(idsToFix.filter(id => sourceData.findIndex(id => sourceItem._id === id) > -1));
   console.log('Docs found: ' + data.length);
   runReplication(data, 0);
 };
@@ -78,7 +78,7 @@ const runReplication = (items, index) => {
     const { completed, running } = runningAndCompletedReplicators(replicators);
     const runningSize = calculateAttachmentSize(getDocsFromReplicators(running, items));
     const nextDocSize = calculateAttachmentSize([ items[index] ]);
-    if ((running.length > 0 && runningSize + nextDocSize >= maxReplicatorSize) || replicators[0] === 'no-response') {
+    if ((running.length > 0 && runningSize + nextDocSize >= maxReplicatorSize && running.length < maxReplicators) || replicators[0] === 'no-response') {
       console.log('Replicators full. (' + (runningSize + nextDocSize) + ')');
       setTimeout(() => runReplication(items, index), waitTime);
       return;
