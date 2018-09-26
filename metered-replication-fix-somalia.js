@@ -56,7 +56,7 @@ const getReplicationData = () => {
 const compareDataAndBeginReplication = (sourceData) => {
   const data = sourceData.filter((sourceItem) => {
     return idsToFix.findIndex(id => sourceItem._id === id) > -1;
-  }).concat(idsToFix.filter(id => sourceData.findIndex(sourceItem => sourceItem._id === id) > -1));
+  }).concat(idsToFix.filter(id => sourceData.findIndex(sourceItem => sourceItem._id === id) === -1));
   console.log('Docs found: ' + data.length);
   runReplication(data, 0);
 };
@@ -78,7 +78,7 @@ const runReplication = (items, index) => {
     const { completed, running } = runningAndCompletedReplicators(replicators);
     const runningSize = calculateAttachmentSize(getDocsFromReplicators(running, items));
     const nextDocSize = calculateAttachmentSize([ items[index] ]);
-    if ((running.length > 0 && runningSize + nextDocSize >= maxReplicatorSize && running.length < maxReplicators) || replicators[0] === 'no-response') {
+    if ((running.length > 0 && runningSize + nextDocSize >= maxReplicatorSize) || running.length >= maxReplicators || replicators[0] === 'no-response') {
       console.log('Replicators full. (' + (runningSize + nextDocSize) + ')');
       setTimeout(() => runReplication(items, index), waitTime);
       return;
