@@ -56,7 +56,11 @@ const getReplicationData = () => {
 const compareDataAndBeginReplication = (sourceData) => {
   const data = sourceData.filter((sourceItem) => {
     return idsToFix.findIndex(id => sourceItem._id === id) > -1;
-  }).concat(idsToFix.filter(id => sourceData.findIndex(sourceItem => sourceItem._id === id) === -1));
+  }).concat(
+    idsToFix
+    .filter(id => sourceData.findIndex(sourceItem => sourceItem._id === id) === -1)
+    .map(id => ({ '_id': id }))
+  );
   console.log('Docs found: ' + data.length);
   runReplication(data, 0);
 };
