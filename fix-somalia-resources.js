@@ -140,7 +140,7 @@ const changeTypeStep = (resources, originalType, newType, callback) => {
 
 getResources(deleteStep);
 
-// Initial version where PDF and OGG with incorrect MIME type were reuploaded (now are deleted)
+// Initial version where PDFs with incorrect MIME type were reuploaded (now are deleted)
 
 // const pdfStep = (resources) => {
 //   console.log('Fixing PDFs...');
