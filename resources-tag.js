@@ -51,7 +51,7 @@ const createTags = (resource, fieldName) => {
   if (resource[fieldName] === undefined) {
     return [];
   }
-  return resource[fieldName];
+  return Array.isArray(resource[fieldName]) ? resource[fieldName] : [ resource[fieldName] ];
 }
 
 const tagResources = (err, response) => {
