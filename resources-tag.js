@@ -8,14 +8,17 @@ const protocol = process.argv[5] || 'http';
 const uri = protocol + '://' + user + ':' + pass + '@' + domain + '/resources/_all_docs?include_docs=true';
 const postUri = protocol + '://' + user + ':' + pass + '@' + domain + '/resources';
 
+const batchSize = 500;
+
 const getResources = (callback) => {
   request.get({ uri, json: true }, callback);
 }
 
-const postCallback = (err, response) => {
+const postCallback = (resources, index) => (err, response) => {
   if (err) {
     console.log(err);
   }
+  postInBatches(resources, index + batchSize);
 }
 
 const dedupeArray = (newArray, item) => {
@@ -68,11 +71,20 @@ const tagResources = (err, response) => {
     ).map(tag => tag.toLowerCase()).reduce(dedupeArray, []).map(tag => tag);
     return { ...doc, tags };
   }).filter(resource => resource !== undefined);
+  postInBatches(resources, 0);
+}
+
+const postInBatches = (resources, startIndex) => {
+  if (startIndex > resources.length) {
+    return;
+  }
+  console.log('Updating resources ' + startIndex + ' through ' + (startIndex + batchSize - 1));
+  const resourceBatch = resources.slice(startIndex, startIndex + batchSize);
   request.post({
     uri: postUri + '/_bulk_docs',
-    body: { docs: resources },
+    body: { docs: resourceBatch },
     json: true
-  }, postCallback);
+  }, postCallback(resources, startIndex));
 }
 
 getResources(tagResources);
