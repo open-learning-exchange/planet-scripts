@@ -10,6 +10,7 @@ const badTypes = [
   'video/x-flv',
   'video/flv',
   'video/3gpp',
+  'application/octet-stream',
   'no-attachments'
 ];
 
@@ -121,12 +122,7 @@ const descriptionStep = (resources) => {
   const badDescriptionResources = resources
     .filter(resource => Array.isArray(resource.doc.description))
     .map(resource => ({ ...resource.doc, description: resource.doc.description[0] }));
-  updateResources(badDescriptionResources, false, () => getResources(pdfStep));
-};
-
-const pdfStep = (resources) => {
-  console.log('Fixing PDFs...');
-  changeTypeStep(resources, 'application/octet-stream', 'application/pdf', () => getResources(oggStep));
+  updateResources(badDescriptionResources, false, () => getResources(oggStep));
 };
 
 const oggStep = (resources) => {
@@ -143,3 +139,10 @@ const changeTypeStep = (resources, originalType, newType, callback) => {
 };
 
 getResources(deleteStep);
+
+// Initial version where PDF and OGG with incorrect MIME type were reuploaded (now are deleted)
+
+// const pdfStep = (resources) => {
+//   console.log('Fixing PDFs...');
+//   changeTypeStep(resources, 'application/octet-stream', 'application/pdf', () => getResources(oggStep));
+// };
