@@ -28,7 +28,7 @@ const updateDocs = (docs, db, callback) => {
 };
 
 const addParentToConfiguration = (configurations) => {
-  updateDocs(configurations.map(config => ({ ...config, parentCode})), () => {
+  updateDocs(configurations.map(config => ({ ...config, parentCode})), 'configurations', () => {
     console.log('Configurations updated');
   });
 }
