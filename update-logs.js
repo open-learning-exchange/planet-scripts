@@ -36,11 +36,12 @@ const addParentToConfiguration = (configurations) => {
 }
 
 const createConfigurationReplication = (configuration) => {
+  const replicationAddress = protocol + '://' + user + ':' + pass + '@localhost:5984/';
   const replicationObject = {
     // Name the id always after the local database
     '_id': 'configuration_push',
     'source': {
-      'url': couchAddress + 'configurations'
+      'url': replicationAddress + 'configurations'
     },
     'target': {
       'headers': {
