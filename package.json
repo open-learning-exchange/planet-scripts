@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/ole-vi/planet-scripts#readme",
   "dependencies": {
+    "btoa": "^1.2.1",
     "request": "^2.88.0"
   }
 }

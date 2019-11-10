@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const request = require('request');
+const btoa = require('btoa');
 
 const user = process.argv[2];
 const pass = process.argv[3];
@@ -28,8 +29,32 @@ const updateDocs = (docs, db, callback) => {
 };
 
 const addParentToConfiguration = (configurations) => {
-  updateDocs(configurations.map(config => config.parentCode = parentCode), () => {
+  updateDocs(configurations.map(config => ({ ...config, parentCode})), 'configurations', () => {
+    createConfigurationReplication(configurations[0]);
     console.log('Configurations updated');
+  });
+}
+
+const createConfigurationReplication = (configuration) => {
+  const replicationAddress = protocol + '://' + user + ':' + pass + '@localhost:5984/';
+  const replicationObject = {
+    // Name the id always after the local database
+    '_id': 'configuration_push_' + Date.now(),
+    'source': {
+      'url': replicationAddress + 'configurations'
+    },
+    'target': {
+      'headers': {
+        'Authorization': 'Basic ' + btoa(configuration.adminName + ':' + pass)
+      },
+      'url': 'https://' + configuration.parentDomain + '/communityregistrationrequests'
+    },
+    'create_target':  false,
+    'owner': user,
+    'continuous': false
+  };
+  request.post({ uri: couchAddress + '_replicator', body: replicationObject, json: true }, () => {
+    console.log('Configuration replicating to parent');
   });
 }
 
