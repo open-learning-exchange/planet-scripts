@@ -26,16 +26,16 @@ const updateProgresses = (err, response) => {
     if (doc._id.indexOf('_design/') > -1) {
       return;
     }
-    if (isNaN(doc.updatedDate)) {
-        console.log("Update " + doc.createdOn);
+    if (doc.updatedDate || doc.createdDate) {
+        if (isNaN(doc.createdOn)) {
+            return { updatedDate: 0, createdDate: 0, ...doc };
+        }
+        return { updatedDate: doc.createdOn, createdDate: doc.createdOn, ...doc }; 
     }
-    if (doc.updatedDate && doc.createdDate) {
-      return;
+    if(isNaN(doc.updatedDate) || isNaN(doc.createdDate)) {
+        return { ...doc, updatedDate: 0, createdDate: 0 };
     }
-    if (isNaN(doc.createdOn)) {
-        return { updatedDate: 0, createdDate: 0, ...doc };
-    }
-    return { updatedDate: doc.createdOn, createdDate: doc.createdOn, ...doc };
+    return;
   }).filter(progress => progress !== undefined);
   postInBatches(progresses, 0);
 }
